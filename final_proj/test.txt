@@ -1,0 +1,135 @@
+message SearchService {
+    // 定义一个message类型
+    message SearchRequest {
+        string content = 1；  
+        string keyword = 2；
+    } 
+    //   类型         字段名       序号
+    SearchRequest searchRequest = 3；
+}
+
+import test_pb2 as pb
+
+search_service.type = "request"
+search_service.id = 1
+search_service.searchRequest.content = "hello protobuf!"
+search_service.searchRequest.keyword = "mk"
+
+--------------------
+syntax = "proto3";
+
+message SearchService {
+    
+    # 修饰符  类型  字段名 序号
+    repeated int32 uid = 5;
+    
+}    
+
+search_service.uid.append(1)
+search_service.uid.append(2)
+--------------------
+
+syntax = "proto3";
+
+message SearchService {
+    message Second {  
+        string type = 1; 
+        string word = 2;
+        
+    }
+    repeated Second seconds = 6;
+}    
+
+search_service.seconds.append(
+    search_service.Second(type='efg', word="world")
+)
+or
+
+# 实例化一个second
+second = search_service.Second()
+# 为second对象赋值
+second.type = 'abc'
+second.word = 'world'
+# 添加至seconds列表中
+search_service.seconds.append(second)
+
+seconds = [
+    search_service.Second(type='1', word="world"),
+    search_service.Second(type='2', word="world")
+]
+search_service.seconds.extend(seconds)
+
+
+发起connection
+收到connected
+
+发起pickup --seqnum
+收到ack
+
+收到response ---seqnum
+回复ack
+
+发起
+
+
+
+syntax = 'proto3';
+import "google/protobuf/any.proto";
+package main;
+
+message User{
+    int32 index = 1;
+    string name = 2;
+    repeated Phone content = 3;
+    google.protobuf.Any Value = 4;
+}
+
+message Phone{
+    string phoneType = 1;
+    int32 number = 2;
+}
+
+enum PhoneType{
+    Telephone = 0;
+    Home = 1;
+    Work = 2;
+}
+
+message Remark{
+  string note = 1;
+}
+
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+# @Author: Richard
+# 导入phone_pb2模块
+import phone_pb2
+# 创建user实例
+user = phone_pb2.User()
+# 填入user信息
+user.index = 1
+user.name = "User1"
+# 1、当 message 嵌套写入数据时，使用 add()
+phone = user.content.add()
+
+pt = phone_pb2.PhoneType
+# 2、enum 字段类型，使用 .Name(<int>)类型进行查看
+# print(pt.Name(0))
+phone.phoneType = pt.Name(0)
+phone.number = 10000
+
+# 3、repeated 字段类型,查看转义源码 default_value=[] 可知为 list 类型，可使用 append()添加字段
+user.content.append(phone)
+
+info = phone_pb2.Remark()
+info.note = "中国电信"
+# info.note = "中国电信".encode('raw_unicode_escape')
+# info.note = "中国电信".encode('unicode-escape')
+mark = user.Value
+# 4、Any 字段类型类似于泛型，使用 .Pack() 进行添加，使用 .Unpack() 类型进行解析
+mark.Pack(info)
+
+# 生成二进制文件
+out_b = user.SerializeToString()
+print(out_b)
+
