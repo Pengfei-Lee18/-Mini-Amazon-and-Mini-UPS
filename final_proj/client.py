@@ -12,6 +12,7 @@ import world_ups_pb2 as World_Ups
 connected = World_Ups.UConnected()
 connected.worldid = 1
 connected.result = "OK"
+
 string_message = connected.SerializeToString()
 ip_port = ('127.0.0.1', 12345)
 
