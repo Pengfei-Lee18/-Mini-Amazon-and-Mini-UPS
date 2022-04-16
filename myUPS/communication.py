@@ -8,7 +8,7 @@ from django.db import transaction
 import django 
 if django.VERSION >= (1, 7):
     django.setup()
-from upswebsite.models import User,Package,Truck,Ack
+from upswebsite.models import DeliveringTruck, User,Package,Truck,Ack
 
 from multiprocessing import cpu_count
 import world_ups_pb2 as World_Ups
@@ -80,10 +80,24 @@ def UResponse_obj(buf_message):
     response.ParseFromString(buf_message)
     for each_complete in response.completions:   #for pickup response
         truck = Truck.objects.get(id=each_complete.truck_id)
+        delivering_truck = DeliveringTruck.objects.get(truck=truck)
+        delivering_truck.delete()
         truck.status = 'loading'
+        message = UsendArrive_obj(truck.truck_id)
+        truck.save()
+        # 发给amazon,改改socket
+        tools.send_message(client.s,message)
+        
     for each_delivered in response.delivered:
         truck = Truck.objects.get(id=each_delivered.truck_id)
         truck.status = 'delivered'
+        truck.save()
+        message = UpacDelivered_obj(each_delivered.shipment_id)
+        #发给amazon,改改socket
+        tools.send_message(client.s,message)
+    for each_status in response.truckstatus:
+        continue
+
     if response.HasField('finished'):
         if response.finished:
             closeworld()
@@ -96,6 +110,7 @@ def UResponse_obj(buf_message):
 
 def closeworld():
     print("closeworld")
+    client.s.close()
     return
 #Communication with Amazon
 
@@ -107,7 +122,11 @@ def AResponse(buf_message):
         whid = response.pickup.whid
         shipment_id = response.pickup.shipment_id
         whid = response.pickup.whid
-        truck =Truck.objects.order_by('truck_package_number')[0]
+        if DeliveringTruck.objects.get(whid = whid).exists():
+            truck = DeliveringTruck.objects.get(whid = whid).truck
+        else:
+            truck =Truck.objects.order_by('truck_package_number')[0]
+            DeliveringTruck.objects.create(truck=truck,whid=whid)
         if response.pickup.HasField('ups_username'):
             if User.objects.get(name = username).exists():
                 ups_username = response.pickup.ups_username
@@ -141,6 +160,7 @@ def AResponse(buf_message):
         while(not result):
             tools.send_message(client.s,command)
             result = Ack.objects.get(seqnum=seqnum).exists()
+
     if response.HasField('bind_upsuser'):
         shipment_id = response.bind_upsuser.shipment_id
         username = response.bind_upsuser.ups_username

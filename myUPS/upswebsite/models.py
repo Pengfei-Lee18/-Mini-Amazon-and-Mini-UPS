@@ -28,6 +28,11 @@ class Package(models.Model):
     }
     status = models.CharField(max_length=32, choices=status_options, default="pick_up")
 
-
+class DeliveringTruck(models.Model):
+    whid = models.IntegerField(primary_key=True)
+    truck = models.ForeignKey(Truck, on_delete=models.SET_NULL, null=True, blank=True)
+    def __str__(self):
+        return self.whid
+        
 # class Ack(models.Model):
 #     seqnum = models.IntegerField(default=0)
