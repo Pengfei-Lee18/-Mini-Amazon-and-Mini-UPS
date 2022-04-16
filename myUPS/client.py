@@ -8,29 +8,35 @@ import os
 import socket
 from google.protobuf.internal.decoder import _DecodeVarint32
 from google.protobuf.internal.encoder import _EncodeVarint
+from concurrent.futures import ProcessPoolExecutor
 import world_ups_pb2 as World_Ups
 import communication
+import tools
 # connected = World_Ups.UConnected()
 # connected.worldid = 1
 # connected.result = "OK"
 
 
-ip_port = ('127.0.0.1', 12345)
+ip_port = ('vcm-25303.vm.duke.edu', 23456)
 
 s = socket.socket()
 
 s.connect(ip_port)
 
-while True:
-    print("client send the message")
-    connect = communication.UConnect_obj()
-    string_message = connect.SerializeToString()
-    _EncodeVarint(s.send, len(string_message), None)
-    s.send(string_message)
+print("client send the message")
+connect = communication.UConnect_obj()
+tools.send_message(s, connect)
 
-
-    server_reply = s.recv(1024).decode()
-    print(server_reply)
-    break
-        
+buf_message = tools.receive(s)
+print(buf_message)
+tmessage = World_Ups.UConnected()
+tmessage.ParseFromString(buf_message)
+print(tmessage)
+id = tmessage.worldid
+message ='server already receive the message: ' + str(id)
+print(message)
+pool = ProcessPoolExecutor(20)
+while True: 
+    resp_message = tools.receive(s)
+    pool.submit(communication.UResponse_obj, resp_message)
 s.close()

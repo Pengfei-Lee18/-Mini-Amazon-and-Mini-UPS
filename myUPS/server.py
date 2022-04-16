@@ -9,7 +9,7 @@ import socket
 from google.protobuf.internal.decoder import _DecodeVarint32
 from google.protobuf.internal.encoder import _EncodeVarint
 import world_ups_pb2 as World_Ups
-ip_port = ('127.0.0.1', 12345)
+ip_port = ('vcm-25303.vm.duke.edu', 23456)
 import communication
 
 sk = socket.socket()             

@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/cheatsheet/">
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'upswebsite/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'upswebsite/cheatsheet.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <br>
+        <br>
+
+        <div>
+            {% if islogin %}
+            <a class="btn btn-secondary" href="/logout" role="button">logout</a>
+            {% else %}
+            <a class="btn btn-secondary" href="/login" role="button">login</a>
+            {% endif %}
+        </div>
+        <div class="col">
+            <form class="form-register" action="/index/" method="post">
+                {% csrf_token %}
+                <h2 class="text-center">index</h2>
+                {% if tracknum_form.captcha.errors %}
+                <div class="alert alert-warning">{{ tracknum_form.captcha.errors }}</div>
+                {% elif message %}
+                <div class="alert alert-warning">{{ message }}</div>
+                {% endif %} 
+                <div class="form-group">
+                    {{ tracknum_form.tracknum.label_tag }} {{ tracknum_form.tracknum}}
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary float-right">find</button>
+                </div>
+            </form>
+        </div>
+        <br>
+        {% if searchres %}
+        <div class="col"> 
+            <div class="bd-example" style="width:100% !important">
+                <caption><h4>search result</h4></caption>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Ship ID</th>
+                            <th scope="col">Track Number</th>
+                            <th scope="col">Deliever To</th>
+                            <th scope="col">Owner</th>
+                            <th scope="col">status</th>
+                            <th scope="col">Operation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-info">
+                            <th scope="row">{{searchres.shipment_id}}</th>
+                            <td>{{searchres.tracking_id}}</td>
+                            <td>{{searchres.dest}}</td>
+                            <td>{{searchres.user_id}}</td>
+                            <td>{{searchres.status}}</td>
+                            </td>
+                            {% if islogin %}
+                            {% if searchres.user_id %}
+                            <td>
+                                cannot bind
+                            </td>
+                            {% else %}
+                            <td>
+                                <a class="btn btn-secondary" href="/index/bind{{searchres.tracking_id}}" role="button">bind</a>
+                            </td>
+                            {% endif %}
+                            {% else %}
+                            <td>
+                                login to bind
+                            </td>
+                            {% endif %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        <br>
+        {% if packagelist %}
+        <div class="col"> 
+            <div class="bd-example" style="width:100% !important">
+                <caption><h4>package list</h4></caption>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Ship ID</th>
+                            <th scope="col">Track Number</th>
+                            <th scope="col">Deliever To</th>
+                            <th scope="col">Owner</th>
+                            <th scope="col">status</th>
+                            <th scope="col">Operation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for package in packagelist %}
+                        <tr class="table-info">
+                            <th scope="row">{{package.shipment_id}}</th>
+                            <td>{{package.tracking_id}}</td>
+                            <td>{{package.dest}}</td>
+                            <td>{{package.user_id}}</td>
+                            <td>{{package.status}}</td>
+                            </td>
+                            <td>
+                                <a class="btn btn-danger" href="/index/unbind{{package.tracking_id}}" role="button">delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

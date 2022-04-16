@@ -15,7 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from upswebsite import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.index),
+    path('index/', views.index),
+    path('login/', views.login),
+    path('logout/', views.logout),
+    path('register/', views.register),
+    path('index/bind<int:tracking_id>', views.bind),
+    path('index/unbind<int:tracking_id>', views.unbind),
 ]
