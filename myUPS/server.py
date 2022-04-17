@@ -26,7 +26,7 @@ while True:     #
         if new_pos != 0:
             break
     print(msg_len)
-    buf_message = conn.recv(1024)
+    buf_message = conn.recv(msg_len)
     tmessage = World_Ups.UConnected()
     tmessage.ParseFromString(buf_message)
     id = tmessage.worldid

@@ -1,6 +1,6 @@
 from statistics import mode
 from django.db import models
-import uuid
+
 # Create your models here.
 class User(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -13,9 +13,17 @@ class User(models.Model):
 class Truck(models.Model):
     truck_id = models.CharField(max_length=128, unique= True)
     truck_package_number = models.IntegerField(default=0)
-
+    status_options = {
+        ('idle','idle'),
+        ('traveling','traveling'),
+        ('arrive warehouse','arrive warehouse'),
+        ('loading','loading'),
+        ('delivering','delivering')
+    }
+    status = models.CharField(max_length=32, choices=status_options, default="idle")
+    
 class Package(models.Model):
-    shipment_id = models.CharField(max_length=128, unique= True)
+    shipment_id = models.IntegerField(unique= True)
     tracking_id = models.AutoField(primary_key=True)
     dest = models.CharField(max_length=128, unique= True, null=True, blank=True)
     user_id = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -32,7 +40,10 @@ class DeliveringTruck(models.Model):
     whid = models.IntegerField(primary_key=True)
     truck = models.ForeignKey(Truck, on_delete=models.SET_NULL, null=True, blank=True)
     def __str__(self):
-        return self.whid
-        
-# class Ack(models.Model):
-#     seqnum = models.IntegerField(default=0)
+        return self.truck.truck_id
+
+class Ack(models.Model):
+    seqnum = models.IntegerField(default=0)
+
+class Sequence(models.Model):
+    seq = models.IntegerField(default=0)

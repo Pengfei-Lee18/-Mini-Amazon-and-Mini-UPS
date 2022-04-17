@@ -2,21 +2,24 @@ import os
 from unicodedata import name
 
 from setuptools import Command 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "upswebsite.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myUPS.settings")
 from django.db import transaction
 
 import django 
 if django.VERSION >= (1, 7):
     django.setup()
-from upswebsite.models import DeliveringTruck, User,Package,Truck,Ack
+from upswebsite.models import DeliveringTruck, User,Package,Truck,Ack,DeliveringTruck
 
 from multiprocessing import cpu_count
 import world_ups_pb2 as World_Ups
 import UA_pb2 as UA
-import client
 import tools
 seqnum = 0
 
+# TODO:
+# 循环发送请求检查ack vs 队列轮询
+# 改package状态到loading
+# 是否需要另外开一个线程对每个truck的status进行检查并更新到数据库
 
 ##commuication with World_Ups
 def UConnect_obj():
@@ -72,49 +75,87 @@ def UQuery_obj(truck_id,seqnum):
 def Ack_obj(seqnum):
     command = World_Ups.UCommands()
     ack = command.acks.add()
-    ack.seqnum = seqnum
+    ack = seqnum #?????????????????
     return command
 
-def UResponse_obj(buf_message):
+def UResponse_obj(buf_message,s,s_amazon):
+    global seqnum
     response = World_Ups.UResponse()
     response.ParseFromString(buf_message)
     for each_complete in response.completions:   #for pickup response
-        truck = Truck.objects.get(id=each_complete.truck_id)
-        delivering_truck = DeliveringTruck.objects.get(truck=truck)
-        delivering_truck.delete()
-        truck.status = 'loading'
-        message = UsendArrive_obj(truck.truck_id)
-        truck.save()
-        # 发给amazon,改改socket
-        tools.send_message(client.s,message)
-        
+        # 去掉已经处理过的sequencenumber
+        if Sequence.objects.filter(seq=each_complete.seqnum):
+            continue
+        else:
+            tools.send_message(s,Ack_obj(each_complete.seqnum))
+            Sequence.objects.create(seq=each_complete.seqnum)
+        truck = Truck.objects.get(truck_id=each_complete.truckid)
+        if(each_complete.status=='arrive warehouse'):
+            delivering_truck = DeliveringTruck.objects.get(truck=truck)
+            delivering_truck.delete()
+            truck.status = 'loading'
+            truck.save()
+            # 发给amazon,改改socket
+            message = UsendArrive_obj(truck.truck_id) #给amz发消息说到了,准备load 但是package的状态在那里改成loading？？
+            tools.send_message(s_amazon,message) #要改
+        else:
+            truck.status = 'idle'
+            truck.save()
+
     for each_delivered in response.delivered:
-        truck = Truck.objects.get(id=each_delivered.truck_id)
-        truck.status = 'delivered'
+        if Sequence.objects.filter(seq=each_delivered.seqnum):
+            continue   
+        else:
+            tools.send_message(s,Ack_obj(each_delivered.seqnum))
+            Sequence.objects.create(seq=each_delivered.seqnum)
+        cur_package = Package.objects.get(shipment_id=each_delivered.packageid)
+        cur_package.status = 'delivered'
+        cur_package.save()
+        truck = Truck.objects.get(truck_id=each_delivered.truckid)
+        truck.status = 'delivering'
         truck.save()
-        message = UpacDelivered_obj(each_delivered.shipment_id)
-        #发给amazon,改改socket
-        tools.send_message(client.s,message)
+         #发给amazon,改改socket
+        message = UpacDelivered_obj(each_delivered.packageid)
+        tools.send_message(s_amazon,message) #要改
+
     for each_status in response.truckstatus:
+        if Sequence.objects.filter(seq=each_status.seqnum):
+            continue   
+        else:
+            tools.send_message(s,Ack_obj(each_status.seqnum))
+            Sequence.objects.create(seq=each_status.seqnum)
+        #待定功能，可能用于在后台自动刷新数据中的truck位置和状态。数据库需要加trcuk坐标
         continue
 
     if response.HasField('finished'):
+        #关闭世界
         if response.finished:
-            closeworld()
+            closeworld(s)
+
     for each_ack in response.acks:
+        if Sequence.objects.filter(seq=each_ack.seqnum):
+            continue   
+        else:
+            Sequence.objects.create(seq=each_ack.seqnum)
         ack = Ack.objects.create(seqnum=each_ack)
+
     for each_err in response.error:
-        print(each_err.seqnum," error occur: ",each_err.error)
+        if Sequence.objects.filter(seq=each_err.seqnum):
+            continue   
+        else:
+            tools.send_message(s,Ack_obj(each_err.seqnum))
+            Sequence.objects.create(seq=each_err.seqnum)
+        print(each_err.seqnum, " error occur: ",each_err.error)
 
     return 
 
-def closeworld():
+def closeworld(s):
     print("closeworld")
-    client.s.close()
+    s.close()
     return
 #Communication with Amazon
 
-def AResponse(buf_message):
+def AResponse(buf_message,s,s_amazon):
     global seqnum
     response = UA.AUmessage()
     response.ParseFromString(buf_message)
@@ -122,15 +163,18 @@ def AResponse(buf_message):
         whid = response.pickup.whid
         shipment_id = response.pickup.shipment_id
         whid = response.pickup.whid
+        x = response.pickup.x
+        y = response.pickup.y
         if DeliveringTruck.objects.get(whid = whid).exists():
             truck = DeliveringTruck.objects.get(whid = whid).truck
         else:
             truck =Truck.objects.order_by('truck_package_number')[0]
             DeliveringTruck.objects.create(truck=truck,whid=whid)
+            truck.truck_package_number += 1
         if response.pickup.HasField('ups_username'):
             if User.objects.get(name = username).exists():
                 ups_username = response.pickup.ups_username
-                package = Package.objects.create(shipment_id=shipment_id,user_id = ups_username,truck = truck,status = 'pick_up')
+                package = Package.objects.create(shipment_id=shipment_id,user_id = ups_username,truck = truck,status = 'pick_up',x = x,y = y)
                 response = UPacPickupRes_obj(package.tracking_id,package.truck.truck_id,package.shipment_id,True)
         else:
             package = Package.objects.create(shipment_id=shipment_id,truck = truck,status = 'pick_up')
@@ -158,7 +202,7 @@ def AResponse(buf_message):
             seqnum += 1
         result = False
         while(not result):
-            tools.send_message(client.s,command)
+            tools.send_message(s,command)
             result = Ack.objects.get(seqnum=seqnum).exists()
 
     if response.HasField('bind_upsuser'):
