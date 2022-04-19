@@ -17,7 +17,7 @@ import tools
 # connected.result = "OK"
 
 
-ip_port = ('vcm-25303.vm.duke.edu', 23456)
+ip_port = ('vcm-25303.vm.duke.edu', 12345)
 
 s = socket.socket()
 
@@ -35,3 +35,5 @@ print(tmessage)
 id = tmessage.worldid
 message ='server already receive the message: ' + str(id)
 print(message)
+while(1):
+    pass

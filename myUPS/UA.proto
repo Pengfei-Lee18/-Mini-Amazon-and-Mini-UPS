@@ -24,10 +24,18 @@ message UsendArrive{
     required int32 truck_id = 1;
 }
 
+message AProduct{
+    required int64 product_id = 1;
+    required string description = 2;
+    required int32 count = 3;
+    
+}
+
 message APackage{ 
     required int32 x = 1; 
     required int32 y = 2;
     required int64 shipment_id = 3; 
+    repeated AProduct item = 4;
 }
 
 message ASendAllLoaded{

@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'myUPS.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'ups',
         'USER': 'postgres',
         'PASSWORD': 'passw0rd',
         'HOST': '127.0.0.1',
