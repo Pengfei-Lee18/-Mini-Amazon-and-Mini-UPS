@@ -15,3 +15,7 @@ class RegisterForm(forms.Form):
 
 class TrackForm(forms.Form):
     tracknum = forms.DecimalField(label="tracknum", min_value=0, max_digits=32, decimal_places=0, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+class DestForm(forms.Form):
+    x = forms.DecimalField(label="x", max_digits=32, decimal_places=0, widget=forms.TextInput(attrs={'class': 'form-control'})) 
+    y = forms.DecimalField(label="y", max_digits=32, decimal_places=0, widget=forms.TextInput(attrs={'class': 'form-control'}))

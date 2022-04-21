@@ -26,4 +26,6 @@ urlpatterns = [
     path('register/', views.register),
     path('index/bind<int:tracking_id>', views.bind),
     path('index/unbind<int:tracking_id>', views.unbind),
+    path('index/items<int:shipment_id>', views.item),
+    path('index/changedest<int:tracking_id>', views.changedest),
 ]

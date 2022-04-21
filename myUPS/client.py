@@ -20,24 +20,24 @@ import tools
 # connected = World_Ups.UConnected()
 # connected.worldid = 1
 # connected.result = "OK"
-
-def runamz(s, conn):
-    pools = ThreadPoolExecutor(20)
+lock=threading.Lock() #创建线程锁
+def runamz(s, conn, world_id):
+    pools = ThreadPoolExecutor(40)
     while True: 
         resp_message = tools.receive(conn)
         print("client receive the message from amz:")
-        print(resp_message,s,conn)
-        pools.submit(communication.AResponse, resp_message, s, conn)
+        print(resp_message,s,conn,world_id)
+        pools.submit(communication.AResponse, resp_message, s, conn, world_id)
 
-def runworld(s, conn):
-    pools = ThreadPoolExecutor(20)
+def runworld(s, conn, world_id):
+    pools = ThreadPoolExecutor(40)
     while True: 
         resp_message = tools.receive(s)
         print("client receive the message from world:")
-        print(resp_message,s,conn)
-        pools.submit(communication.UResponse_obj, resp_message, s, conn)
+        print(resp_message,s,conn,world_id)
+        pools.submit(communication.UResponse_obj, resp_message, s, conn, world_id)
 
-ip_port = ('vcm-25303.vm.duke.edu', 12345)
+ip_port = ('vcm-26419.vm.duke.edu', 12345)
 s = socket.socket()
 s.connect(ip_port)
 print("client send the message")
@@ -51,7 +51,7 @@ print(tmessage)
 world_id = tmessage.worldid
 message ='server already receive the message: ' + str(world_id)
 print(message)
-
+communication.init_trucks_world(world_id)
 #连接amz,并告诉amz worldid
 server_port = ('0.0.0.0', 55555)
 sk = socket.socket()             
@@ -65,12 +65,16 @@ Id = message.world_id
 Id.world_id = world_id
 tools.send_message(conn, message)
 
-#开两个进程
-#一个是处理amz
-thread1 = threading.Thread(target=runamz, args=(s,conn,))
+try:
+    #开两个进程
+    #一个是处理amz
+    thread1 = threading.Thread(target=runamz, args=(s,conn,world_id,))
 
-#一个是处理world
-thread2 = threading.Thread(target=runworld, args=(s,conn,))
+    #一个是处理world
+    thread2 = threading.Thread(target=runworld, args=(s,conn,world_id,))
+except Exception as e:
+    print("报错了")
+    print(e)
 
 thread1.start()
 thread2.start()

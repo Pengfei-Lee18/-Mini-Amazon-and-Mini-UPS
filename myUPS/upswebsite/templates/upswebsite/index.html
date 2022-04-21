@@ -60,7 +60,7 @@
                         <tr class="table-info">
                             <th scope="row">{{searchres.shipment_id}}</th>
                             <td>{{searchres.tracking_id}}</td>
-                            <td>{{searchres.dest}}</td>
+                            <td>({{searchres.x}},{{searchres.y}})</td>
                             <td>{{searchres.user_id}}</td>
                             <td>{{searchres.status}}</td>
                             </td>
@@ -68,15 +68,27 @@
                             {% if searchres.user_id %}
                             <td>
                                 cannot bind
+                                <a class="btn btn-secondary" href="/index/items{{searchres.shipment_id}}" role="button">item details</a>
+                                {% if searchres.status == 'pick_up' or  searchres.status == 'loading'%}
+                                <a class="btn btn-secondary" href="/index/changedest{{searchres.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
                             </td>
                             {% else %}
                             <td>
                                 <a class="btn btn-secondary" href="/index/bind{{searchres.tracking_id}}" role="button">bind</a>
+                                <a class="btn btn-secondary" href="/index/items{{searchres.shipment_id}}" role="button">item details</a>
+                                {% if searchres.status == 'pick_up' or  searchres.status == 'loading'%}
+                                <a class="btn btn-secondary" href="/index/changedest{{searchres.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
                             </td>
                             {% endif %}
                             {% else %}
                             <td>
                                 login to bind
+                                <a class="btn btn-secondary" href="/index/items{{searchres.shipment_id}}" role="button">item details</a>
+                                {% if searchres.status == 'pick_up' or  searchres.status == 'loading'%}
+                                <a class="btn btn-secondary" href="/index/changedest{{searchres.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
                             </td>
                             {% endif %}
                         </tr>
@@ -106,12 +118,16 @@
                         <tr class="table-info">
                             <th scope="row">{{package.shipment_id}}</th>
                             <td>{{package.tracking_id}}</td>
-                            <td>{{package.dest}}</td>
+                            <td>({{package.x}},{{package.y}})</td>
                             <td>{{package.user_id}}</td>
                             <td>{{package.status}}</td>
                             </td>
                             <td>
                                 <a class="btn btn-danger" href="/index/unbind{{package.tracking_id}}" role="button">delete</a>
+                                <a class="btn btn-secondary" href="/index/items{{package.shipment_id}}" role="button">item details</a>
+                                {% if package.status == 'pick_up' or  package.status == 'loading'%}
+                                <a class="btn btn-secondary" href="/index/changedest{{package.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
