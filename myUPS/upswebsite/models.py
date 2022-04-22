@@ -42,6 +42,7 @@ class Package(models.Model):
     }
     status = models.CharField(max_length=32, choices=status_options, default="pick_up")
     world_id = models.IntegerField(default=0)
+    hasresend = models.BooleanField(default=False)
     
 class DeliveringTruck(models.Model):
     whid = models.IntegerField(primary_key=True)
@@ -65,3 +66,6 @@ class Product(models.Model):
     shipment_id = models.IntegerField(default=0)
     world_id = models.IntegerField(default=0)
 
+class Resend(models.Model):
+    shipment_id = models.IntegerField(default = 0)
+    world_id = models.IntegerField(default=0)

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-fo1ccxx8a*t!ry_wb*)4mw7l)4g66@f&3&l9bnmt568#o5c6*0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['web','*']
 
 
 # Application definition
@@ -105,6 +105,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_HOST_USER = '903501845@qq.com'
+EMAIL_HOST_PASSWORD = 'nitxxyvictuebbab'
+EMAIL_USE_SSL = True 
+EMAIL_PORT = 465
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
@@ -127,3 +135,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://*.duke.edu',
+    'http://*.duke.edu:8000',
+    'http://localhost',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1'
+]

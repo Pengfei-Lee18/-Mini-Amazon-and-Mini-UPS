@@ -20,6 +20,9 @@ import tools
 # connected = World_Ups.UConnected()
 # connected.worldid = 1
 # connected.result = "OK"
+
+socket_amazon = None
+
 lock=threading.Lock() #创建线程锁
 def runamz(s, conn, world_id):
     pools = ThreadPoolExecutor(40)
@@ -37,7 +40,7 @@ def runworld(s, conn, world_id):
         print(resp_message,s,conn,world_id)
         pools.submit(communication.UResponse_obj, resp_message, s, conn, world_id)
 
-ip_port = ('vcm-26419.vm.duke.edu', 12345)
+ip_port = ('vcm-25303.vm.duke.edu', 12345)
 s = socket.socket()
 s.connect(ip_port)
 print("client send the message")
@@ -64,20 +67,20 @@ message = UA.UAmessage()
 Id = message.world_id 
 Id.world_id = world_id
 tools.send_message(conn, message)
-
 try:
     #开两个进程
     #一个是处理amz
     thread1 = threading.Thread(target=runamz, args=(s,conn,world_id,))
-
     #一个是处理world
     thread2 = threading.Thread(target=runworld, args=(s,conn,world_id,))
+    thread3 = threading.Thread(target=communication.resend_package, args=(conn,world_id,))
 except Exception as e:
     print("报错了")
     print(e)
 
 thread1.start()
 thread2.start()
+thread3.start()
 thread1.join()
 thread2.join()
 s.close()

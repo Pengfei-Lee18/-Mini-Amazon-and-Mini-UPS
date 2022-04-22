@@ -67,10 +67,17 @@
                             {% if islogin %}
                             {% if searchres.user_id %}
                             <td>
-                                cannot bind
+                                cannot bind  
                                 <a class="btn btn-secondary" href="/index/items{{searchres.shipment_id}}" role="button">item details</a>
                                 {% if searchres.status == 'pick_up' or  searchres.status == 'loading'%}
                                 <a class="btn btn-secondary" href="/index/changedest{{searchres.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
+                                {% if searchres.status == 'delivered'%}
+                                {% if not searchres.hasresend %}
+                                <a class="btn btn-secondary" href="/index/resend{{searchres.shipment_id}}" role="button">lost? resend</a>
+                                {% else %}
+                                resended
+                                {% endif %}
                                 {% endif %}
                             </td>
                             {% else %}
@@ -80,6 +87,13 @@
                                 {% if searchres.status == 'pick_up' or  searchres.status == 'loading'%}
                                 <a class="btn btn-secondary" href="/index/changedest{{searchres.tracking_id}}" role="button">change dest</a>
                                 {% endif %}
+                                {% if searchres.status == 'delivered'%}
+                                {% if not searchres.hasresend %}
+                                <a class="btn btn-secondary" href="/index/resend{{searchres.shipment_id}}" role="button">lost? resend</a>
+                                {% else %}
+                                resended
+                                {% endif %}
+                                {% endif %}
                             </td>
                             {% endif %}
                             {% else %}
@@ -88,6 +102,13 @@
                                 <a class="btn btn-secondary" href="/index/items{{searchres.shipment_id}}" role="button">item details</a>
                                 {% if searchres.status == 'pick_up' or  searchres.status == 'loading'%}
                                 <a class="btn btn-secondary" href="/index/changedest{{searchres.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
+                                {% if searchres.status == 'delivered'%}
+                                {% if not searchres.hasresend %}
+                                <a class="btn btn-secondary" href="/index/resend{{searchres.shipment_id}}" role="button">lost? resend</a>
+                                {% else %}
+                                resended
+                                {% endif %}
                                 {% endif %}
                             </td>
                             {% endif %}
@@ -127,6 +148,13 @@
                                 <a class="btn btn-secondary" href="/index/items{{package.shipment_id}}" role="button">item details</a>
                                 {% if package.status == 'pick_up' or  package.status == 'loading'%}
                                 <a class="btn btn-secondary" href="/index/changedest{{package.tracking_id}}" role="button">change dest</a>
+                                {% endif %}
+                                {% if package.status == 'delivered'%}
+                                {% if not package.hasresend %}
+                                <a class="btn btn-secondary" href="/index/resend{{package.shipment_id}}" role="button">lost? resend</a>
+                                {% else %}
+                                resended
+                                {% endif %}
                                 {% endif %}
                             </td>
                         </tr>

@@ -28,4 +28,5 @@ urlpatterns = [
     path('index/unbind<int:tracking_id>', views.unbind),
     path('index/items<int:shipment_id>', views.item),
     path('index/changedest<int:tracking_id>', views.changedest),
+    path('index/resend<int:shipment_id>', views.resend),
 ]

@@ -1,14 +1,15 @@
 import os
-from re import X
+from re import U, X
 from unicodedata import name
 from setuptools import Command 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myUPS.settings")
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 import django 
 if django.VERSION >= (1, 7):
     django.setup()
-from upswebsite.models import DeliveringTruck, Product, User,Package,Truck,Ack,Sequence,World
+from upswebsite.models import DeliveringTruck, Product, User,Package,Truck,Ack,Sequence,World, Resend
 from multiprocessing import cpu_count
 import world_ups_pb2 as World_Ups
 import UA_pb2 as UA
@@ -17,6 +18,8 @@ import time
 import threading
 
 lock=threading.Lock()
+seq_lock=threading.Lock()
+socket_amazon = None
 seqnum = 0
 
 def init_trucks_world(world_id):
@@ -31,15 +34,36 @@ def init_trucks_world(world_id):
 def UConnect_obj():
     connect = World_Ups.UConnect()
     # connect.worldid = int(input("please enter the worldid: ").strip())
-    truck_raw_list = input("please enter the truck: ").split()
-    truck_list =[truck_raw_list[i:i+2] for i in range(0,len(truck_raw_list),2)]
-    
-    for truck_num in truck_list:
-        truck = connect.trucks.add()
-        cur_truck = Truck.objects.create(truck_package_number=0, status='idle')
-        truck.id = int(cur_truck.truck_id)
-        truck.x = int(truck_num[0])
-        truck.y = int(truck_num[1])
+
+#initialize method 1
+    while(1):
+        truck_number = input("please enter the number of trucks(all trucks initialize at (0,0)): ").strip()
+        if truck_number.isdigit():
+            truck_number = int(truck_number)
+            print(truck_number)
+            if truck_number > 0:
+                for i in range(truck_number):
+                    truck = connect.trucks.add()
+                    cur_truck = Truck.objects.create(truck_package_number=0, status='idle')
+                    truck.id = int(cur_truck.truck_id)
+                    truck.x = 0
+                    truck.y = 0
+                break
+        print('plase enter the right format!')
+            
+
+
+#initialize method 2
+    # truck_raw_list = input("please enter the truck: ").split()
+    # truck_list =[truck_raw_list[i:i+2] for i in range(0,len(truck_raw_list),2)]
+
+    # for truck_num in truck_list:
+    #     truck = connect.trucks.add()
+    #     cur_truck = Truck.objects.create(truck_package_number=0, status='idle')
+    #     truck.id = int(cur_truck.truck_id)
+    #     truck.x = int(truck_num[0])
+    #     truck.y = int(truck_num[1])
+
     connect.isAmazon = False
     return connect
 
@@ -140,6 +164,18 @@ def UResendPackage_obj(shipment_id):
     resendpackage.shipment_id = shipment_id
     return message
 
+def resend_package(conn, world_id):
+    while True:
+        resendlist = Resend.objects.filter(world_id=world_id)
+        for resend in resendlist:
+            response = UResendPackage_obj(resend.shipment_id)
+            print("resend package:")
+            print(response)
+            tools.send_message(conn,response)
+            resend.delete()
+            time.sleep(0.3)
+        time.sleep(5)
+
 def ACK_find(seqnum, world_id):
     while(True):
         print("in ACK_find")
@@ -148,6 +184,24 @@ def ACK_find(seqnum, world_id):
         if ack:
             break
         time.sleep(0.7)
+
+def send_email(email, track_num, locationx, locationy):
+
+    from django.core.mail import EmailMultiAlternatives
+    print("发了")
+    subject = '''your order has been delivered'''
+
+    text_content = '''your order has been delivered'''
+
+    html_content = '''
+                    <p>your order has been delivered, here is detailed information</p>
+                    <p>Tracking Number: {}</p>
+                    <p>Destination: ({},{})</p>
+                    '''.format(track_num, locationx, locationy)
+
+    msg = EmailMultiAlternatives(subject, text_content, settings.EMAIL_HOST_USER, [email])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
 
 def request_send(s, message, stop_signal):
     while (not stop_signal):
@@ -201,6 +255,11 @@ def UResponse_obj(buf_message,s,s_amazon,world_id):
             #发给amazon,改改socket
             message = UpacDelivered_obj(each_delivered.packageid)
             tools.send_message(s_amazon,message) #要改
+            email = cur_package.user_id.email
+            track_num = cur_package.tracking_id
+            locationx = cur_package.x
+            locationy = cur_package.y
+            send_email(email, track_num, locationx, locationy)
         except Exception as ex:
             print("delivered 报错")
             print(ex)
@@ -281,7 +340,10 @@ def closeworld(s):
     return
 #Communication with Amazon
 
+
 def AResponse(buf_message,s,s_amazon,world_id):
+    # global socket_amazon
+    # socket_amazon = s_amazon
     stop_signal = []
     stop_signal2 = []
     print("AResponse,multiple process")
@@ -322,7 +384,9 @@ def AResponse(buf_message,s,s_amazon,world_id):
                 truck.truck_package_number += 1
                 truck.save()
                 lock.release() 
+                seq_lock.acquire() 
                 seqnum += 1
+                seq_lock.release() 
                 cur_seq = seqnum
                 print("seqnum:",seqnum)
                 command = UGoPickup_obj(truck.truck_id,whid,cur_seq)
@@ -405,7 +469,9 @@ def AResponse(buf_message,s,s_amazon,world_id):
             print("all_loaded has field")
             truck_id = response.all_loaded.truck_id
             print("遍历package  ")
+            seq_lock.acquire() 
             seqnum += 1
+            seq_lock.release() 
             cur_seq2 = seqnum
             # 暂且这样写，后面再改
             command = World_Ups.UCommands()
@@ -460,7 +526,7 @@ def AResponse(buf_message,s,s_amazon,world_id):
             print(ex)
 
     if response.HasField('bind_upsuser'):
-        
+    
         print("bind_upsuser has field")
         try:
             shipment_id = response.bind_upsuser.shipment_id

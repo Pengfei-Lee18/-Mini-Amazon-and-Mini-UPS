@@ -6,6 +6,10 @@ from . import forms
 from django.db.models import Q
 import json
 from django.conf import settings
+import threading
+import sys 
+sys.path.append("..")
+from communication import resend_package
 
 world_id = 1
 
@@ -143,3 +147,12 @@ def changedest(request, tracking_id):
             return render(request, 'upswebsite/dest.html', locals())
     dest_form = forms.DestForm()
     return render(request, 'upswebsite/dest.html', locals())
+
+def resend(request, shipment_id):
+    cur_package = models.Package.objects.get(shipment_id=shipment_id, world_id=world_id)
+    cur_package.hasresend = True
+    cur_package.save()
+    models.Resend.objects.create(shipment_id=shipment_id, world_id=world_id)
+    thread1 = threading.Thread(target=resend_package, args=(shipment_id,))
+    thread1.start()
+    return redirect('/index/')

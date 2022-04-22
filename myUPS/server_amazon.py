@@ -7,18 +7,16 @@ import os
 #     django.setup()
 import socket
 import time
-from google.protobuf.internal.decoder import _DecodeVarint32
-from google.protobuf.internal.encoder import _EncodeVarint
-from concurrent.futures import ProcessPoolExecutor
-import world_ups_pb2 as World_Ups
-import communication
 import tools
 import UA_pb2 as UA
 # connected = World_Ups.UConnected()
 # connected.worldid = 1
 # connected.result = "OK"
 
-
+'''
+insert into warehouse (wh_id, x,y, world_id) values (1,222,223,1);
+insert into package (package_id , wh_id , world_id , truck_id , desx , desy , package_status) values (1,1,1,1,2,3,'LOADED');
+'''
 ip_port = ('127.0.0.1', 55555)
 
 s = socket.socket()
@@ -46,14 +44,18 @@ pickup_message.shipment_id = 1
 pickup_message.ups_username = 'test'
 tools.send_message(s,message)
 
+
 buf_message = tools.receive(s)
 print(buf_message)
-tmessage = UA.UAmessage()
-tmessage.ParseFromString(buf_message)
-pickupres = tmessage.pickup_res
+tmessage2 = UA.UAmessage()
+tmessage2.ParseFromString(buf_message)
+pickupres = tmessage2.pickup_res
+print(pickupres)
 truckid = pickupres.truck_id
+print(truckid)
 print('server already receive the message: ' )
-print(tmessage)
+print(tmessage2)
+
 
 buf_message2 = tools.receive(s)
 print(buf_message2)
@@ -63,8 +65,26 @@ print('server already receive the message: ' )
 print(tmessage2)
 
 
+
+# bind
+message = UA.AUmessage()
+print('client send the message for bind_upsuser')
+bind_upsuser = message.bind_upsuser
+bind_upsuser.shipment_id = 1
+bind_upsuser.ups_username = 'feifei'
+tools.send_message(s,message)
+buf_message = tools.receive(s)
+print(buf_message)
+tmessage = UA.UAmessage()
+tmessage.ParseFromString(buf_message)
+print('server already receive the message: ' )
+print(tmessage)
+
+
+
 message = UA.AUmessage()
 all_loaded = message.all_loaded
+#??????????????????
 all_loaded.truck_id = truckid
 print(truckid)
 package = all_loaded.packages.add()
@@ -75,6 +95,7 @@ item = package.item.add()
 item.product_id = 1
 item.description = 'test_product_description'
 item.count = 2
+print(message)
 tools.send_message(s,message)
 buf_message = tools.receive(s)
 print(buf_message)
@@ -87,19 +108,6 @@ time.sleep(5)
 
 
 
-message = UA.AUmessage()
-print('client send the message for bind_upsuser')
-bind_upsuser = message.bind_upsuser
-bind_upsuser.shipment_id = 1
-bind_upsuser.ups_username = 'test1'
-tools.send_message(s,message)
-time.sleep(15)
-buf_message = tools.receive(s)
-print(buf_message)
-tmessage = UA.UAmessage()
-tmessage.ParseFromString(buf_message)
-print('server already receive the message: ' )
-print(tmessage)
 while True:
     pass
 s.close()

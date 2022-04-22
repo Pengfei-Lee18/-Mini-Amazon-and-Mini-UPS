@@ -1,2 +1,2 @@
 echo yes | python3 manage.py flush
-python3 client.py
+echo 50 | python3 client.py
