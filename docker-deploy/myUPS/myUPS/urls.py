@@ -24,6 +24,7 @@ urlpatterns = [
     path('login/', views.login),
     path('logout/', views.logout),
     path('register/', views.register),
+    path('truck/', views.truck),
     path('index/bind<int:tracking_id>', views.bind),
     path('index/unbind<int:tracking_id>', views.unbind),
     path('index/items<int:shipment_id>', views.item),

@@ -160,3 +160,7 @@ def resend(request, shipment_id):
     thread1 = threading.Thread(target=resend_package, args=(shipment_id,))
     thread1.start()
     return redirect('/index/')
+
+def truck(request):
+    trucklist = models.Truck.objects.filter(world_id=world_id).order_by('truck_id')
+    return render(request, 'upswebsite/truck.html', locals())

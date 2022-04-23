@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'upswebsite/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'upswebsite/register.css' %}" rel="stylesheet" />
+    <title>trucks</title>
+</head>
+
+<body>
+    <div class="container">
+        <br>
+        <br>
+        <br>
+        <div class="col"> 
+            <div class="bd-example" style="width:100% !important">
+                <caption><h4>trucks</h4></caption>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Truck ID</th>
+                            <th scope="col">Truck Status</th>
+                            <th scope="col">Truck Package Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for truck in trucklist %}
+                        <tr class="table-info">
+                            <th scope="row">{{truck.truck_id}}</th>
+                            <td>{{truck.status}}</td>
+                            <td>{{truck.truck_package_number}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br>
+    </div>
+</body>
+
+</html>
