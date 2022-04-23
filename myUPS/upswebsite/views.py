@@ -136,9 +136,13 @@ def changedest(request, tracking_id):
         dest_form = forms.DestForm(request.POST)
         message = "check your input"
         if dest_form.is_valid():
+            
             x = dest_form.cleaned_data.get('x')
             y = dest_form.cleaned_data.get('y')
             cur_package = models.Package.objects.get(tracking_id=tracking_id, world_id=world_id)
+            if cur_package.status == 'delivering' or cur_package.status == 'delivered':
+                message = 'cannot change dest'
+                return redirect('/index/')
             cur_package.x = x
             cur_package.y = y
             cur_package.save()
