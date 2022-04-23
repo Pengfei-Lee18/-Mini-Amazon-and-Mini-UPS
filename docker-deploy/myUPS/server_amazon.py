@@ -17,7 +17,7 @@ import UA_pb2 as UA
 insert into warehouse (wh_id, x,y, world_id) values (1,222,223,1);
 insert into package (package_id , wh_id , world_id , truck_id , desx , desy , package_status) values (1,1,1,1,2,3,'LOADED');
 '''
-ip_port = ('vcm-26404.vm.duke.edu', 55555)
+ip_port = ('127.0.0.1', 55555)
 
 s = socket.socket()
 

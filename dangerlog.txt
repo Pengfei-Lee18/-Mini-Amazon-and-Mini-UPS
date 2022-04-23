@@ -1,0 +1,18 @@
+1. To receive the whole package, we first send length of the package then send the package.
+
+2.At first, it difficult for us to handle both ups and amazon at the same time, so we use thread pool to manage the request sending from different server.
+
+3.To ensure world has receive our information, ack numbers are stored in our database. We keep querying the database to ensure we get the ack message. otherwise we just keep resending the package.
+
+4.We check the status of truck and then decide which truck to use. At first, another package is assigned to a busy truck before the truck status change to busy. So we add a lock.
+
+5.There is possibility that the owner information amazon send out is not right, so we add a message type to allow amazon have a sencond chance to bind user to the package.
+
+6.To avoid socket problem, we add try except to handle it.
+
+7.We use try except to debug our program, since there is no reminder shows the problem during communication.
+
+8.Since we use multithreading to handle request, we use global variable,sequence number and lock when the value changes.
+
+9.We save the truck status in our database and update them instead of using query to the world to increase efficiency.
+

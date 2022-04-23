@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+  db:
+      image: postgres
+      environment:
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_DB: postgres
+      restart: always
+      volumes:
+        - data-volume:/var/lib/postgresql/data
+  web-init:
+      build: ./myUPS
+      command: bash -c "chmod 777 initserver.sh && sh initserver.sh"
+      volumes:
+        - ./myUPS:/code
+      depends_on:
+        - db
+  server:
+      build: ./myUPS
+      command: bash -c "sh runclient.sh"
+      volumes:
+        - ./myUPS:/code
+      ports:
+        - "55555:55555"
+      depends_on:
+        - web-init
+  web:
+      build: ./myUPS
+      user: nobody
+      command: bash -c "sh runserver.sh"
+      volumes:
+        - ./myUPS:/code
+      expose:
+        - "8000"
+      depends_on:
+        - server
+  nginx:
+     image: nginx:latest
+     ports:
+       - "8000:8000"
+     volumes:
+       - ./nginx/config:/etc/nginx/conf.d
+     depends_on:
+       - web
+volumes:
+   data-volume: 

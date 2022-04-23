@@ -28,7 +28,7 @@ insert into package (package_id , wh_id , world_id , truck_id , desx , desy , pa
 '''
 
 
-ip_port = ('127.0.0.1', 55555)
+ip_port = ('vcm-26404.vm.duke.edu', 55555)
 
 s = socket.socket()
 

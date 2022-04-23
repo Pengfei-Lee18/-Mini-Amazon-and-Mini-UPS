@@ -35,7 +35,7 @@ import UA_pb2 as UA
 
 
 
-ip_port = ('vcm-26404.vm.duke.edu', 55555)
+ip_port = ('127.0.0.1', 55555)
 
 s = socket.socket()
 
