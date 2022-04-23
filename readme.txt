@@ -1,3 +1,31 @@
+how to run the docker file:
+
+change AMAZON and World ip port: in docker-deploy/myUPS/clent.py 
+
+change world:
+43 row: ip_port = ('vcm-25303.vm.duke.edu', 12345) #change this
+
+change amazon:
+59 row: server_port = ('0.0.0.0', 55555) #change this
+
+command:
+sudo docker-compose build
+sudo docker-compose up
+
+step: 
+1. open the world
+2.open UPS
+3. open amazon
+
+#UPS webpage :http://127.0.0.1:8000/
+you can input tracknum to test
+
+how to test:
+see the output in terminal, we print all the instructions.
+
+
+-------------------------google protobuf-----------------------------------------
+
 
 how to use protobuf:
 
