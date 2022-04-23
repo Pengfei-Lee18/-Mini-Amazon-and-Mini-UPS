@@ -14,10 +14,10 @@ import UA_pb2 as UA
 # connected.result = "OK"
 
 '''
-insert into warehouse (wh_id, x,y, world_id) values (1,0,0,1);
+insert into warehouse (wh_id, x,y, world_id) values (1,222,223,1);
 insert into package (package_id , wh_id , world_id , truck_id , desx , desy , package_status) values (1,1,1,1,2,3,'LOADED');
 '''
-ip_port = ('127.0.0.1', 55555)
+ip_port = ('vcm-26404.vm.duke.edu', 55555)
 
 s = socket.socket()
 
@@ -66,36 +66,23 @@ print(tmessage2)
 
 
 
-# bind
-message = UA.AUmessage()
-print('client send the message for bind_upsuser')
-bind_upsuser = message.bind_upsuser
-bind_upsuser.shipment_id = 1
-bind_upsuser.ups_username = 'feifei'
-tools.send_message(s,message)
-buf_message = tools.receive(s)
-print(buf_message)
-tmessage = UA.UAmessage()
-tmessage.ParseFromString(buf_message)
-print('server already receive the message: ' )
-print(tmessage)
-
 
 
 message = UA.AUmessage()
 all_loaded = message.all_loaded
 #??????????????????
-all_loaded.truck_id = 1
+all_loaded.truck_id = truckid
 print(truckid)
 package = all_loaded.packages.add()
 package.x = 2
 package.y = 3
 package.shipment_id = 1
-item = package.item.add()
-item.product_id = 1
-item.description = 'test_product_description'
-item.count = 2
-print(message)
+for i in range(100):
+    item = package.item.add()
+    item.product_id = i
+    item.description = 'test_product_description'+str(i)
+    item.count = i+1
+    print(message)
 tools.send_message(s,message)
 buf_message = tools.receive(s)
 print(buf_message)

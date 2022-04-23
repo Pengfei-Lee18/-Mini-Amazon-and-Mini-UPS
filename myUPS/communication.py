@@ -295,6 +295,7 @@ def UResponse_obj(buf_message,s,s_amazon,world_id):
                 print("给amz发消息说到了")
                 packagelist = Package.objects.filter(truck = truck, status = 'pick_up', world_id=world_id)
                 for package in packagelist:
+                    print(package.tracking_id)
                     package.status = 'loading'
                     package.save()
                 print("更改完了package的状态为loading")

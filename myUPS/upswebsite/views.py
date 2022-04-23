@@ -10,7 +10,6 @@ import threading
 import sys 
 sys.path.append("..")
 from communication import resend_package
-
 world_id = 1
 
 # Create your views here.
