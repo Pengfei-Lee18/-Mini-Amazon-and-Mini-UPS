@@ -293,8 +293,12 @@ def UResponse_obj(buf_message,s,s_amazon,world_id):
                 tools.send_message(s_amazon,message) #要改
                 print("发送了消息给amazon说到了",message)
                 print("给amz发消息说到了")
-                packagelist = Package.objects.filter(truck = truck, status = 'pick_up', world_id=world_id)
+                truck = Truck.objects.get(truck_id=each_complete.truckid,world_id=world_id)
+                packagelist = Package.objects.filter(truck = Truck.objects.get(truck_id=each_complete.truckid,world_id=world_id), status = 'pick_up', world_id=world_id)
+                print(packagelist)
+                print(truck.truck_id)
                 for package in packagelist:
+                    print(package.tracking_id)
                     package.status = 'loading'
                     package.save()
                 print("更改完了package的状态为loading")
@@ -361,6 +365,7 @@ def AResponse(buf_message,s,s_amazon,world_id):
             shipment_id = response.pickup.shipment_id
             x = response.pickup.x
             y = response.pickup.y
+            package = None ###########################
             #如果有车正在去这个wh
             if DeliveringTruck.objects.filter(whid = whid,world_id=world_id):
                 print("delivering truck")
@@ -396,7 +401,8 @@ def AResponse(buf_message,s,s_amazon,world_id):
 
                 print("send command")
                 print(command)
-
+                ###########################
+                package = Package.objects.create(shipment_id=shipment_id,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
 
                 # while(not result):
                 '''
@@ -435,7 +441,9 @@ def AResponse(buf_message,s,s_amazon,world_id):
                     cur_user = User.objects.get(name = ups_username,world_id=world_id)
                     print("user has field")
                     try:
-                        package = Package.objects.create(shipment_id=shipment_id,user_id = cur_user,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
+                        # package = Package.objects.create(shipment_id=shipment_id,user_id = cur_user,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
+                        package.user_id = cur_user
+                        package.save()
                         response = UPacPickupRes_obj(package.tracking_id,package.truck.truck_id,package.shipment_id,True)
                     except Exception as ex:
                         print("在生成包裹对应人名的时候报错")
@@ -444,20 +452,20 @@ def AResponse(buf_message,s,s_amazon,world_id):
                     print("user not exist, truck id =")
                     print(truck.truck_id)
                     try:
-                        package = Package.objects.create(shipment_id=shipment_id,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
+                        # package = Package.objects.create(shipment_id=shipment_id,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
                         response = UPacPickupRes_obj(package.tracking_id,package.truck.truck_id,package.shipment_id,False)
                     except Exception as ex:
                         print("在生成包裹的时候报错")
                         print(ex)
             else:
                 print("ups_username has no field")
-                package = Package.objects.create(shipment_id=shipment_id,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
+                # package = Package.objects.create(shipment_id=shipment_id,x=x,y=y,status='pick_up',truck = truck,world_id=world_id)
                 response = UPacPickupRes_obj(package.tracking_id,package.truck.truck_id,package.shipment_id,False)
             
             #给amazon端口发消息，改改socket
             print("send message to amazon")
             tools.send_message(s_amazon,response)
-            package.save()
+            
         except Exception as ex:
             print("在pickup的时候报错")
             print(ex)
