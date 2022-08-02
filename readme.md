@@ -1,3 +1,10 @@
+## About this project
+Mini-Amazon and Mini-UPS Spring, 2022
+- Developed a concurrency-supported online shopping and delivery platform, and a server with virtual trucks and warehouses with Django, React.js and PostgreSQL to simulate real-world shopping and shipping processes.
+- Designed a Protobuf-based messaging framework to communicate between three services. Built a TCP-based smart message re-transmission system with error handler mechanisms that accurately received messages without missing
+- Implemented HTTP Proxy to cache web data to improve the speed by 65% of website access static resources.
+
+
 how to run the docker file:
 
 change AMAZON and World ip port: in docker-deploy/myUPS/clent.py 
